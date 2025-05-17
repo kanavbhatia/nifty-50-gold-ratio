@@ -12,7 +12,8 @@ const PORT = process.env.PORT || 3000;
 let dataFetchTime;
 let dataToEmit = {};
 
-const apiKey = "3036d0737b76418abdc1b4f77a69975a";
+require("dotenv").config();
+const apiKey = process.env.CURRENCY_FREAKS_API_KEY;
 
 const filePath = path.join(__dirname);
 
@@ -53,7 +54,7 @@ async function getNifty50Data() {
       method: "GET",
       url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v3/get-chart?interval=1mon&region=IN&symbol=%5ENSEI",
       headers: {
-        "X-RapidAPI-Key": "6dfa5cdab9mshe7ed3e544c1b6d5p1cdef2jsn22f94d66f5c0",
+        "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
         "X-RapidAPI-Host": "apidojo-yahoo-finance-v1.p.rapidapi.com",
       },
     };
@@ -98,8 +99,10 @@ async function getPriceRatio() {
   }
 }
 
-async function logicToCalculateAllocation() {
-  const priceRatio = await getPriceRatio();
+async function logicToCalculateAllocation(goldPrice, niftyPrice) {
+  // const priceRatio = await getPriceRatio();
+  const priceRatio = goldPrice / niftyPrice;
+
   // Implement your logic to calculate allocation based on the price ratio
   if (priceRatio > 0.6) {
     console.log("Reduce gold and increase stocks");
@@ -143,7 +146,7 @@ io.on("connection", async (socket) => {
       // 1. Get latest data and save it to data.json
       const goldPrice = await fetchGoldPricesInRupees();
       const niftyPrice = await getNifty50Data();
-      const message = await logicToCalculateAllocation();
+      const message = await logicToCalculateAllocation(goldPrice, niftyPrice);
       dataToEmit = {
         goldPrice,
         niftyPrice,
