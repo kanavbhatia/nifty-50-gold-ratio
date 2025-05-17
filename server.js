@@ -8,7 +8,7 @@ const path = require("path");
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 let dataFetchTime;
 let dataToEmit = {};
 
@@ -141,7 +141,7 @@ io.on("connection", async (socket) => {
     const currentTime = new Date();
     const timeDiff = Math.abs(currentTime - dataFetchTime);
     const diffInSeconds = Math.floor(timeDiff / 1000);
-    if (!dataFetchTime || diffInSeconds > 60) {
+    if (!dataFetchTime || diffInSeconds > 36000) {
       dataFetchTime = currentTime;
       // 1. Get latest data and save it to data.json
       const goldPrice = await fetchGoldPricesInRupees();
