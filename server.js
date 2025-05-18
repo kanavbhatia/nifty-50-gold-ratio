@@ -19,14 +19,26 @@ const filePath = path.join(__dirname);
 
 async function fetchGoldData() {
   try {
+    // const response = await axios.get(
+    //   "https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD"
+    // );
+    // const data = response.data;
+    // const price = data[0].spreadProfilePrices[0].bid;
     const response = await axios.get(
-      "https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD"
+      "https://real-time-metal-prices.p.rapidapi.com/api/v1/radpidhub/gold-price/USD",
+      {
+        headers: {
+          "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+          "X-RapidAPI-Host": "real-time-metal-prices.p.rapidapi.com",
+        },
+      }
     );
 
     const data = response.data;
-    const price = data[0].spreadProfilePrices[0].bid;
+    const price = data.rates.XAU_ounce; // Price in USD per ounce
     const ounceWeight = 28.3495; // 1 ounce = 28.3495 grams
     const goldPricePerGram = price / ounceWeight; // Convert to price per gram
+
     // console.log("Gold Price:", goldPricePerGram);
     return goldPricePerGram;
   } catch (error) {
@@ -100,6 +112,10 @@ async function getPriceRatio() {
 }
 
 async function logicToCalculateAllocation(goldPrice, niftyPrice) {
+  // if this ratio is greater than 0.6, then gold is overvalued (or Nifty is undervalued) --> so reduce gold and increase stocks
+  // if this ratio is lesser than 0.28, then gold is undervalued (or Nifty is overvalued) --> so increase gold and reduce stocks
+  // if this ratio is between 0.28 and 0.6, then gold and Nifty are fairly valued --> so keep the same allocation
+
   // const priceRatio = await getPriceRatio();
   const priceRatio = goldPrice / niftyPrice;
 
@@ -115,24 +131,24 @@ async function logicToCalculateAllocation(goldPrice, niftyPrice) {
     return "Keep the same allocation";
   }
 }
-async function saveToJSON(data) {
-  try {
-    let arr = [];
-    try {
-      const raw = await fs.promises.readFile(filePath, "utf8");
-      arr = JSON.parse(raw);
-    } catch (_) {
-      // file missing or bad JSON? start with empty array
-      arr = [];
-    }
-    arr.push(data);
-    await fs.promises.writeFile(filePath, JSON.stringify(arr, null, 2), "utf8");
-    console.log("Wrote entry to", filePath);
-  } catch (err) {
-    console.error("saveToJSON caught an error:", err);
-    // swallow it so it never kills your socket handler
-  }
-}
+// async function saveToJSON(data) {
+//   try {
+//     let arr = [];
+//     try {
+//       const raw = await fs.promises.readFile(filePath, "utf8");
+//       arr = JSON.parse(raw);
+//     } catch (_) {
+//       // file missing or bad JSON? start with empty array
+//       arr = [];
+//     }
+//     arr.push(data);
+//     await fs.promises.writeFile(filePath, JSON.stringify(arr, null, 2), "utf8");
+//     console.log("Wrote entry to", filePath);
+//   } catch (err) {
+//     console.error("saveToJSON caught an error:", err);
+//     // swallow it so it never kills your socket handler
+//   }
+// }
 
 io.on("connection", async (socket) => {
   console.log("client connected");
