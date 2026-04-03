@@ -19,23 +19,12 @@ const filePath = path.join(__dirname);
 
 async function fetchGoldData() {
   try {
-    // const response = await axios.get(
-    //   "https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD"
-    // );
-    // const data = response.data;
-    // const price = data[0].spreadProfilePrices[0].bid;
     const response = await axios.get(
-      "https://real-time-metal-prices.p.rapidapi.com/api/v1/radpidhub/gold-price/USD",
-      {
-        headers: {
-          "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
-          "X-RapidAPI-Host": "real-time-metal-prices.p.rapidapi.com",
-        },
-      }
+      "https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD"
     );
-
     const data = response.data;
-    const price = data.rates.XAU_ounce; // Price in USD per ounce
+    const price = data[0].spreadProfilePrices[0].bid; // Price in USD per ounce
+
     const ounceWeight = 28.3495; // 1 ounce = 28.3495 grams
     const goldPricePerGram = price / ounceWeight; // Convert to price per gram
 
