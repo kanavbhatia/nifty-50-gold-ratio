@@ -43,14 +43,51 @@
           </div>
           <div
             id="insight-card"
-            class="bg-white rounded-xl shadow p-6 flex flex-col items-center"
+            class="bg-white rounded-xl shadow p-6 flex flex-col items-center gap-3"
           >
             <div class="text-gray-500 text-lg">Insights</div>
             <div
               id="insight-message"
-              class="text-xl font-medium text-gray-800 text-center"
+              class="text-xl font-bold text-gray-800 text-center"
             >
               Loading...
+            </div>
+            <div
+              id="insight-detail"
+              class="text-sm text-gray-500 text-center leading-relaxed"
+            ></div>
+            <div
+              class="w-full mt-2 bg-gray-100 rounded-lg p-3 text-xs text-gray-500 leading-relaxed"
+            >
+              <strong class="text-gray-600 block mb-1"
+                >How this ratio works</strong
+              >
+              The Gold/Nifty ratio compares the price of 1g of gold (in ₹) to
+              the Nifty 50 index level. Historically, when gold is cheap
+              relative to Nifty, markets are overheating — shift into gold. When
+              gold is expensive, markets are undervalued — shift into equities.
+              <div class="mt-2 flex flex-col gap-1">
+                <span
+                  ><span class="font-semibold text-red-500"
+                    >Ratio &gt; 0.6</span
+                  >
+                  — Gold overvalued / Nifty cheap → reduce gold, buy
+                  stocks</span
+                >
+                <span
+                  ><span class="font-semibold text-green-600"
+                    >Ratio 0.28–0.6</span
+                  >
+                  — Both fairly valued → hold current allocation</span
+                >
+                <span
+                  ><span class="font-semibold text-blue-500"
+                    >Ratio &lt; 0.28</span
+                  >
+                  — Gold undervalued / Nifty expensive → increase gold, trim
+                  stocks</span
+                >
+              </div>
             </div>
           </div>
         </div>
@@ -74,9 +111,23 @@
       }
 
       function getAllocationMessage(ratio) {
-        if (ratio > 0.6) return "Reduce gold and increase stocks";
-        if (ratio < 0.28) return "Increase gold and reduce stocks";
-        return "Keep the same allocation";
+        if (ratio > 0.6)
+          return {
+            msg: "Reduce gold, increase stocks",
+            detail:
+              "The ratio is above 0.6 — gold is expensive relative to Nifty. This suggests equities are undervalued. Consider trimming your gold position and moving more into Nifty 50 index funds.",
+          };
+        if (ratio < 0.28)
+          return {
+            msg: "Increase gold, reduce stocks",
+            detail:
+              "The ratio is below 0.28 — gold is cheap relative to Nifty. This suggests the stock market may be stretched. Consider adding more gold and reducing equity exposure.",
+          };
+        return {
+          msg: "Keep the same allocation",
+          detail:
+            "The ratio is between 0.28 and 0.6 — gold and Nifty 50 are fairly valued relative to each other. No rebalancing needed right now.",
+        };
       }
 
       async function fetchGoldPricePerGram() {
@@ -114,8 +165,10 @@
           document.getElementById("gold-price").textContent =
             formatNumber(goldPrice);
           document.getElementById("ratio").textContent = formatNumber(ratio);
-          document.getElementById("insight-message").textContent =
-            getAllocationMessage(ratio);
+          const insight = getAllocationMessage(ratio);
+          document.getElementById("insight-message").textContent = insight.msg;
+          document.getElementById("insight-detail").textContent =
+            insight.detail;
         } catch (err) {
           console.error("Error loading data:", err);
           document.getElementById("insight-message").textContent =
