@@ -20,7 +20,7 @@ const filePath = path.join(__dirname);
 async function fetchGoldData() {
   try {
     const response = await axios.get(
-      "https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD"
+      "https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD",
     );
     const data = response.data;
     const price = data[0].spreadProfilePrices[0].bid; // Price in USD per ounce
@@ -38,7 +38,7 @@ async function fetchGoldData() {
 async function fetchDollarPrices() {
   try {
     const response = await axios.get(
-      `https://api.currencyfreaks.com/v2.0/rates/latest?apikey=${apiKey}`
+      `https://api.currencyfreaks.com/v2.0/rates/latest?apikey=${apiKey}`,
     );
 
     const price = response.data.rates.INR;

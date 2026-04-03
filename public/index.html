@@ -1,11 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>Nifty vs Gold Live</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   </head>
   <body
     class="bg-gray-50 flex flex-col items-center min-h-screen justify-center"
@@ -52,7 +50,7 @@
               id="insight-message"
               class="text-xl font-medium text-gray-800 text-center"
             >
-              Waiting for data...
+              Loading...
             </div>
           </div>
         </div>
@@ -66,27 +64,66 @@
     </div>
 
     <script>
-      const socket = io("http://localhost:8080");
-      socket.on("data", ({ dataToEmit }) => {
-        const { niftyPrice, goldPrice, ratio, message } = dataToEmit;
+      function formatNumber(value) {
+        if (typeof value !== "number") return "--";
+        return value.toLocaleString("en-IN", {
+          minimumIntegerDigits: 1,
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 3,
+        });
+      }
 
-        // Helper function to mimic Angular's number pipe: "1.0-3"
-        function formatNumber(value) {
-          if (typeof value !== "number") return value ?? "--";
-          return value.toLocaleString("en-IN", {
-            minimumIntegerDigits: 1,
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 3,
-          });
+      function getAllocationMessage(ratio) {
+        if (ratio > 0.6) return "Reduce gold and increase stocks";
+        if (ratio < 0.28) return "Increase gold and reduce stocks";
+        return "Keep the same allocation";
+      }
+
+      async function fetchGoldPricePerGram() {
+        const res = await fetch("/api/gold");
+        const data = await res.json();
+        const pricePerOunce = data[0].spreadProfilePrices[0].bid; // USD
+        return pricePerOunce / 28.3495; // USD per gram
+      }
+
+      async function fetchUsdToInr() {
+        const res = await fetch("/api/rates");
+        const data = await res.json();
+        return data.rates.INR;
+      }
+
+      async function fetchNiftyPrice() {
+        const res = await fetch("/api/nifty");
+        const data = await res.json();
+        return data.chart.result[0].meta.regularMarketPrice;
+      }
+
+      async function loadData() {
+        try {
+          const [goldPerGramUSD, usdToInr, niftyPrice] = await Promise.all([
+            fetchGoldPricePerGram(),
+            fetchUsdToInr(),
+            fetchNiftyPrice(),
+          ]);
+
+          const goldPrice = goldPerGramUSD * usdToInr;
+          const ratio = goldPrice / niftyPrice;
+
+          document.getElementById("nifty-price").textContent =
+            formatNumber(niftyPrice);
+          document.getElementById("gold-price").textContent =
+            formatNumber(goldPrice);
+          document.getElementById("ratio").textContent = formatNumber(ratio);
+          document.getElementById("insight-message").textContent =
+            getAllocationMessage(ratio);
+        } catch (err) {
+          console.error("Error loading data:", err);
+          document.getElementById("insight-message").textContent =
+            "Error loading data. Please refresh.";
         }
+      }
 
-        document.getElementById("nifty-price").textContent =
-          formatNumber(niftyPrice);
-        document.getElementById("gold-price").textContent =
-          formatNumber(goldPrice);
-        document.getElementById("ratio").textContent = formatNumber(ratio);
-        document.getElementById("insight-message").textContent = message ?? "";
-      });
+      loadData();
     </script>
   </body>
 </html>
